@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ကျပ် ပဲ ရွေး ↔ ဂရမ် Converter</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:24px;background:#f3f7fc;color:#17345f;font-family:Arial,"Noto Sans Myanmar",sans-serif}
+main{max-width:760px;margin:28px auto;background:#fff;border:1px solid #dce8f8;border-radius:18px;overflow:hidden;box-shadow:0 12px 35px #18365d12}
+header{padding:30px 24px;text-align:center;background:#eaf3ff}
+h1{font-size:clamp(22px,4vw,32px);margin:0 0 8px}
+.sub{color:#59718f;margin:0 0 18px}
+.rate{display:inline-block;padding:10px 18px;border-radius:24px;background:#d7e9ff;font-weight:bold}
+.content{padding:26px}
+label{display:block;font-weight:bold;margin-bottom:9px}
+.grid{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:end}
+.units{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+input{width:100%;min-width:0;padding:13px 10px;border:1px solid #cbd9eb;border-radius:10px;font-size:20px;color:#17345f;background:#fff}
+input:focus{outline:2px solid #8bbcff;border-color:#659fe9}
+.symbol{font-size:24px;color:#6682a6;padding:0 2px 12px}
+.result{padding:14px;border-radius:10px;background:#edf5ff;border:1px solid #cbdff7;min-height:52px;font-size:22px;font-weight:bold;overflow-wrap:anywhere}
+.result-label{margin-top:8px;color:#647b98;font-size:13px}
+.quick{margin-top:24px;padding:16px;border:1px solid #e0eaf7;border-radius:12px;background:#f8fbff}
+.quick strong{display:block;margin-bottom:12px}
+.buttons{display:flex;flex-wrap:wrap;gap:8px}
+button{border:1px solid #c8d8ec;background:white;color:#345477;border-radius:9px;padding:9px 13px;font-size:15px;cursor:pointer}
+button:hover{background:#eaf3ff;border-color:#80afea}
+.actions{display:flex;gap:8px;margin-top:18px}
+.actions button{flex:1;background:#245b9c;color:white;border-color:#245b9c}
+.actions button.secondary{background:white;color:#345477;border-color:#c8d8ec}
+.note{text-align:center;color:#71839b;font-size:13px;margin:18px 0 0}
+@media(max-width:560px){body{padding:12px}main{margin:10px auto}.content{padding:18px}.grid{grid-template-columns:1fr;gap:12px}.symbol{text-align:center;padding:0;transform:rotate(90deg)}}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>ကျပ် ပဲ ရွေး ↔ ဂရမ်</h1>
+<p class="sub">Gram to Kyat, Pe, Yway Converter</p>
+<div class="rate">၁ ကျပ် = ၁၆.၆ g &nbsp;|&nbsp; ၁ ကျပ် = ၁၆ ပဲ = ၁၂၈ ရွေး</div>
+</header>
+<section class="content">
+<div class="grid">
+<div>
+<label for="gramInput">ဂရမ် (g)</label>
+<input id="gramInput" type="number" min="0" step="0.000001" value="16.6" inputmode="decimal">
+</div>
+<div class="symbol">＝</div>
+<div>
+<label>ကျပ် ပဲ ရွေး</label>
+<div id="result" class="result" aria-live="polite">၁ ကျပ်</div>
+<div class="result-label">ခွဲခြမ်းရလဒ်</div>
+</div>
+</div>
+
+<div class="quick">
+<strong>အမြန်ရွေးချယ်ရန် (ဂရမ်)</strong>
+<div class="buttons">
+<button type="button" data-gram="16.6">16.6 g</button>
+<button type="button" data-gram="83">83 g</button>
+<button type="button" data-gram="166">166 g</button>
+<button type="button" data-gram="332">332 g</button>
+<button type="button" data-gram="830">830 g</button>
+<button type="button" data-gram="1660">1660 g</button>
+</div>
+</div>
+
+<div class="actions">
+<button type="button" id="copy">ရလဒ်ကူးယူရန်</button>
+<button type="button" class="secondary" id="reset">ပြန်စရန်</button>
+</div>
+
+<p class="note">တွက်ချက်မှု: ဂရမ် ÷ ၁၆.၆ = ကျပ်။ အကြွင်းကို ၁၆ ဖြင့်မြှောက်၍ ပဲ၊ ထို့နောက် ၈ ဖြင့်မြှောက်၍ ရွေး တွက်ပါသည်။</p>
+</section>
+</main>
+<script>
+const gramInput=document.getElementById('gramInput');
+const result=document.getElementById('result');
+
+function toMyanmarDigits(value){
+  return String(value).replace(/[0-9]/g, d => '၀၁၂၃၄၅၆၇၈၉'[d]);
+}
+
+function formatNumber(value){
+  return Number(value.toFixed(6)).toLocaleString('en-US',{maximumFractionDigits:6});
+}
+
+function calculate(){
+  const grams=Math.max(0, Number(gramInput.value)||0);
+
+  // 1 ကျပ် = 16 ပဲ = 128 ရွေး = 16.6 g
+  const totalKyat=grams/16.6;
+  const kyat=Math.floor(totalKyat + 1e-10);
+  const peTotal=(totalKyat-kyat)*16;
+  const pe=Math.floor(peTotal + 1e-10);
+  const yway=(peTotal-pe)*8;
+
+  let text='';
+  if(kyat>0) text += toMyanmarDigits(kyat)+' ကျပ်';
+  if(pe>0) text += (text?' + ':'')+toMyanmarDigits(pe)+' ပဲ';
+  if(yway>0.000001) text += (text?' + ':'')+toMyanmarDigits(formatNumber(yway))+' ရွေး';
+
+  result.textContent=text || '၀ ရွေး';
+}
+
+gramInput.addEventListener('input',calculate);
+
+document.querySelectorAll('[data-gram]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    gramInput.value=btn.dataset.gram;
+    calculate();
+  });
+});
+
+document.getElementById('reset').addEventListener('click',()=>{
+  gramInput.value=0;
+  calculate();
+});
+
+document.getElementById('copy').addEventListener('click',async()=>{
+  const text=result.textContent;
+  try{
+    await navigator.clipboard.writeText(text);
+    document.getElementById('copy').textContent='ကူးယူပြီးပါပြီ';
+    setTimeout(()=>document.getElementById('copy').textContent='ရလဒ်ကူးယူရန်',1500);
+  }catch{
+    alert(text);
+  }
+});
+
+calculate();
+</script>
+</body>
+</html>
